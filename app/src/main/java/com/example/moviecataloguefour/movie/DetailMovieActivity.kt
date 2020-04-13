@@ -32,7 +32,9 @@ class DetailMovieActivity : AppCompatActivity() {
     private var isFav = false
     private var menuItem: Menu? = null
     private var favorite: Favorite? = null
+    private var movie: Movie? = null
     private var position: Int = 0
+
     private lateinit var movieHelper: MovieHelper
     private lateinit var adapter: FavoriteMovieAdapter
 
@@ -58,13 +60,8 @@ class DetailMovieActivity : AppCompatActivity() {
         movieHelper = MovieHelper.getInstance(applicationContext)
         movieHelper.open()
 
-        //favorite = intent.getParcelableExtra(EXTRA_FAV_MOVIE)
-        if (favorite != null){
-            position = intent.getIntExtra(EXTRA_POSITION, 0)
-            isFav = false
-        }else{
-            favorite = Favorite()
-        }
+        //
+
 
         setIconFav()
 
@@ -185,20 +182,32 @@ class DetailMovieActivity : AppCompatActivity() {
 
     private fun addFavorite() {
 
+        val movieFav = intent.getParcelableExtra(EXTRA_MOVIE) as Movie
+        if (movie != null){
+            position = intent.getIntExtra(EXTRA_POSITION, 0)
+            isFav = false
+        }else{
+            movie = Movie()
+        }
+
+        tv_item_title_favorite.text = movieFav.title
+        tv_item_desc_favorite.text = movieFav.description
+        Glide.with(this).load("https://image.tmdb.org/t/p/w154/"+movieFav.poster).into(img_item_favorite)
+
         val intent = Intent()
-        intent.putExtra(EXTRA_FAV_MOVIE, favorite)
+        intent.putExtra(EXTRA_MOVIE, movie)
         intent.putExtra(EXTRA_POSITION, position)
 
         val values = ContentValues()
-        values.put(_ID, favorite?.id)
-        values.put(TITLE, favorite?.title)
-        values.put(DESCRIPTION, favorite?.description)
-        values.put(POSTER, favorite?.poster)
+        values.put(_ID, movie?.id)
+        values.put(TITLE, movie?.title)
+        values.put(DESCRIPTION, movie?.description)
+        values.put(POSTER, movie?.poster)
 
         movieHelper.open()
         val result = movieHelper.insert(values)
         if (result > 0){
-            favorite?.id = result.toInt()
+            movie?.id = result.toInt()
             setResult(RESULT_ADD, intent)
 
             finish()
