@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Movie Catalogue 4</string>
+
+    <string name="change_language">Bahasa</string>
+
+    <string name="nav_movie">Film</string>
+    <string name="movie_fragment">Movie Fragment</string>
+    <string name="cd_detail_movie">Poster Movie</string>
+    <string name="title_desc_movie_detail">Keterangan :</string>
+    <string name="detail_desc_movie">Description movie here…</string>
+    <string name="title_detail_movie">Title Detail Movie</string>
+    <string name="cd_image_movie">Image Movie</string>
+
+    <string name="nav_tv">Acara Tv</string>
+    <string name="tvshow_fragment">TvShow Fragment</string>
+    <string name="title_tvshow_here">Title Tvshow here</string>
+    <string name="description_from_tvshow_here">Text Description from TvShow here</string>
+    <string name="dc_img_detail_tv_show">Image detail Tv Show</string>
+    <string name="title_detail_tvshow">Title detail tvshow</string>
+    <string name="title_detail_desc_tvshow">Keterangan :</string>
+    <string name="desc_tvshow_here">Description Tvshow here…</string>
+</resources>
