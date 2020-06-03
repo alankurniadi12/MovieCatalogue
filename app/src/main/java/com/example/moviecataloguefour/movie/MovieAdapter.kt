@@ -1,6 +1,7 @@
 package com.example.moviecataloguefour.movie
 
 import android.app.Activity
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,12 +17,28 @@ class MovieAdapter: RecyclerView.Adapter<MovieAdapter.ListViewHolder>() {
         this.onItemClickCallback = onItemClickCallback
     }
 
-    var mData = ArrayList<Movie>()
-    fun setData(items: ArrayList<Movie>){
+    private val mData = ArrayList<Movie>()
+    fun setData(items: ArrayList<Movie>) {
         mData.clear()
         mData.addAll(items)
         notifyDataSetChanged()
     }
+
+    /*fun addItem(movie: Movie) {
+        this.mData.add(movie)
+        notifyItemInserted(this.mData.size - 1)
+    }
+
+    fun updataItem(position: Int, movie: Movie) {
+        this.mData[position] = movie
+        notifyItemChanged(position, movie)
+    }
+
+    fun removeItem(position: Int) {
+        this.mData.removeAt(position)
+        notifyItemRemoved(position)
+        notifyItemChanged(position, this.mData.size)
+    }*/
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ListViewHolder {
         val mView = LayoutInflater.from(viewGroup.context).inflate(R.layout.item_movie, viewGroup, false)
         return ListViewHolder(mView)

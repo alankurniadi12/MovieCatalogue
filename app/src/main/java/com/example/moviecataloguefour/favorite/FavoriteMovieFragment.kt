@@ -13,6 +13,8 @@ import com.example.moviecataloguefour.R
 import com.example.moviecataloguefour.db.MovieHelper
 import com.example.moviecataloguefour.helper.MappingHelper
 import com.example.moviecataloguefour.movie.DetailMovieActivity
+import com.example.moviecataloguefour.movie.Movie
+import com.example.moviecataloguefour.movie.MovieAdapter
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_favorite_movie.*
 import kotlinx.android.synthetic.main.item_fav_mov.*
@@ -31,12 +33,7 @@ class FavoriteMovieFragment : Fragment() {
     private val list = ArrayList<Favorite>()
 
     companion object {
-        const val REQUEST_ADD = 100
-        const val RESULT_ADD = 101
-        const val EXTRA_FAV_MOVIE = "extra_fav_movie"
-        const val EXTRA_POSITION = "extra_position"
-        const val RESULT_DELETE = 102
-        const val REQUEST_UPDATE = 103
+        private const val EXTRA_STATE = "EXTRA_STATE"
     }
 
     override fun onCreateView(
@@ -50,47 +47,84 @@ class FavoriteMovieFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        adapter = FavoriteMovieAdapter(activity!!)
-        adapter.notifyDataSetChanged()
-
-        showRecyclerViewFavMov()
-
-        /*val intent = Intent(context, DetailMovieActivity::class.java)
-        startActivityForResult(intent, DetailMovieActivity.REQUEST_ADD)*/
-
         movieHelper = MovieHelper.getInstance(context)
         movieHelper.open()
 
-        loadFavoriteAsync()
+        showRecyclerFavMov()
+
+        val intent = Intent(context, DetailMovieActivity::class.java)
+        startActivityForResult(intent, DetailMovieActivity.REQUEST_ADD)
+
+        if (savedInstanceState == null) {
+            loadFavoriteAsync()
+        }else {
+            val list = savedInstanceState.getParcelableArrayList<Movie>(EXTRA_STATE)
+            if (list != null) {
+                adapter.listFavMovie = list
+            }
+        }
+
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putParcelableArrayList(EXTRA_STATE, adapter.mData)
+    }
 
+    private fun showRecyclerFavMov() {
+        rv_item_fav_mov.layoutManager = LinearLayoutManager(context)
+        rv_item_fav_mov.setHasFixedSize(true)
+        adapter = MovieAdapter(activity!!)
+        rv_item_fav_mov.adapter = adapter
+
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (data != null) {
+            when (requestCode) {
+                DetailMovieActivity.REQUEST_ADD ->
+                    if (resultCode == DetailMovieActivity.RESULT_ADD) {
+                        val movie = data.getParcelableExtra<Movie>(DetailMovieActivity.EXTRA_MOVIE)
+
+                        adapter.addItem(movie)
+                        rv_item_fav_mov.smoothScrollToPosition(adapter.itemCount - 1)
+
+                        showSnackbarMessage("1 item added")
+                    }
+                DetailMovieActivity.REQUEST_UPDATE -> {
+                    when (requestCode) {
+                        DetailMovieActivity.RESULT_DELETE -> {
+                            val position = data.getIntExtra(DetailMovieActivity.EXTRA_POSITION, 0)
+
+                            adapter.removeItem(position)
+
+                            showSnackbarMessage("1 item removed")
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     private fun loadFavoriteAsync() {
         GlobalScope.launch(Dispatchers.Main) {
             progressBarFavMov.visibility = View.VISIBLE
-            val deferredFavorite = async(Dispatchers.IO) {
+            val deferredFavMovie = async(Dispatchers.IO) {
                 val cursor = movieHelper.queryAll()
                 MappingHelper.mapCursorToArrayList(cursor)
             }
             progressBarFavMov.visibility = View.INVISIBLE
-            val favorites = deferredFavorite.await()
-            if (favorites.size > 0) {
-                adapter.listFavMovie = favorites
+            val movies = deferredFavMovie.await()
+            if (movies.size > 0) {
+                adapter.mData = movies
             }else {
-                adapter.listFavMovie = ArrayList()
+                adapter.mData = ArrayList()
                 showSnackbarMessage("Empty favorite list")
             }
         }
     }
 
-    private fun showRecyclerViewFavMov() {
-        rv_item_fav_mov.layoutManager = LinearLayoutManager(context)
-        rv_item_fav_mov.adapter = adapter
-
-        adapter.setData(list)
-
-    }
 
 
     private fun showSnackbarMessage(message: String) {

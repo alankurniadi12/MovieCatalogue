@@ -15,15 +15,10 @@ import com.example.moviecataloguefour.R
 import com.example.moviecataloguefour.db.DatabaseContract.FavoriteColums.Companion.DESCRIPTION
 import com.example.moviecataloguefour.db.DatabaseContract.FavoriteColums.Companion.POSTER
 import com.example.moviecataloguefour.db.DatabaseContract.FavoriteColums.Companion.TITLE
-import com.example.moviecataloguefour.db.DatabaseContract.FavoriteColums.Companion._ID
 import com.example.moviecataloguefour.db.MovieHelper
 import com.example.moviecataloguefour.favorite.Favorite
-import com.example.moviecataloguefour.favorite.FavoriteMovieAdapter
-import com.example.moviecataloguefour.favorite.FavoriteMovieFragment
-import com.example.moviecataloguefour.favorite.FavoriteMovieFragment.Companion.EXTRA_FAV_MOVIE
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_detail_movie.*
-import kotlinx.android.synthetic.main.fragment_favorite.*
 import kotlinx.android.synthetic.main.fragment_favorite_movie.*
 import kotlinx.android.synthetic.main.item_fav_mov.*
 
@@ -31,36 +26,23 @@ class DetailMovieActivity : AppCompatActivity() {
 
     private var isFav = false
     private var menuItem: Menu? = null
-    private var favorite: Favorite? = null
     private var movie: Movie? = null
     private var position: Int = 0
-
     private lateinit var movieHelper: MovieHelper
-    private lateinit var adapter: FavoriteMovieAdapter
+
 
     companion object {
         const val EXTRA_MOVIE = "extra_movie"
-        const val ALERT_DIALOG_DELETE = 10
         const val EXTRA_POSITION = "extra_position"
         const val RESULT_ADD = 11
         const val RESULT_DELETE = 12
         const val REQUEST_ADD = 14
+        const val REQUEST_UPDATE = 15
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail_movie)
-
-        adapter = FavoriteMovieAdapter(this)
-
-
-        /*val intent = Intent(this, FavoriteMovieFragment::class.java)
-        startActivityForResult(intent, FavoriteMovieFragment.REQUEST_ADD)*/
-
-        movieHelper = MovieHelper.getInstance(applicationContext)
-        movieHelper.open()
-
-        //
 
 
         setIconFav()
@@ -69,42 +51,13 @@ class DetailMovieActivity : AppCompatActivity() {
         getDataMovies()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (data != null)
-            when (requestCode) {
-                FavoriteMovieFragment.REQUEST_ADD ->
-                    if (resultCode == FavoriteMovieFragment.RESULT_ADD) {
-                        val favorite = data.getParcelableExtra<Favorite>(EXTRA_FAV_MOVIE)
-
-                        adapter.addItem(favorite)
-                        rv_item_fav_mov.smoothScrollToPosition(adapter.itemCount - 1)
-
-                        showSnackbarMessage("1 item added")
-                    }
-                FavoriteMovieFragment.RESULT_DELETE -> {
-                    val position = data.getIntExtra(FavoriteMovieFragment.EXTRA_POSITION, 0)
-
-                    adapter.removeItem(position)
-
-                    showSnackbarMessage("1 item removed")
-                }
-            }
-    }
-
-    private fun showSnackbarMessage(message: String) {
-        Snackbar.make(rv_item_fav_mov, message, Snackbar.LENGTH_SHORT).show()
-    }
-
-
     private fun setIconFav() {
-        if (isFav == true){
+        if (isFav){
             menuItem?.getItem(0)?.icon = ContextCompat.getDrawable(this, R.drawable.ic_favorite_black_24dp)
         }else{
             menuItem?.getItem(0)?.icon = ContextCompat.getDrawable(this, R.drawable.ic_favorite_border_black_24dp)
         }
     }
-
 
     private fun showLoading (state: Boolean){
         if (state){
@@ -113,7 +66,6 @@ class DetailMovieActivity : AppCompatActivity() {
             progressbar_movie_detail.visibility = View.GONE
         }
     }
-
 
     private fun getDataMovies() {
         val movie = intent.getParcelableExtra(EXTRA_MOVIE) as Movie
@@ -125,22 +77,17 @@ class DetailMovieActivity : AppCompatActivity() {
         showLoading(false)
     }
 
-
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-
         menuInflater.inflate(R.menu.favorite_menu, menu)
-        /*menuItem = menu
-        setIconFav()*/
 
         return super.onCreateOptionsMenu(menu)
     }
 
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
             R.id.action_add_favorite ->
-                if (isFav == true){
-                    showAlertDialog(ALERT_DIALOG_DELETE)
+                if (isFav){
+                    showAlertDialog()
                 }else {
                     addFavorite()
                 }
@@ -148,22 +95,17 @@ class DetailMovieActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-
-    private fun showAlertDialog(type: Int) {
-        val isDialogDelete = type == ALERT_DIALOG_DELETE
+    private fun showAlertDialog() {
         val dialogTitle = "Remove"
         val dialogMessage = "Remove from list favorite"
-        val alertDialogBuilder = AlertDialog.Builder(this)
 
+        val alertDialogBuilder = AlertDialog.Builder(this)
         alertDialogBuilder.setTitle(dialogTitle)
         alertDialogBuilder
             .setMessage(dialogMessage)
             .setCancelable(false)
             .setPositiveButton("Yes") {dialog, id ->
-                if (isDialogDelete) {
-                    finish()
-                }else {
-                    val result = movieHelper.deleteById(favorite?.id.toString()).toLong()
+                    val result = movieHelper.deleteById(movie?.id.toString()).toLong()
                     if (result > 0){
                         val intent = Intent()
                         intent.putExtra(EXTRA_POSITION, position)
@@ -172,49 +114,38 @@ class DetailMovieActivity : AppCompatActivity() {
                     }else{
                         Toast.makeText(this@DetailMovieActivity, "Faild remove item", Toast.LENGTH_SHORT).show()
                     }
-                }
             }
             .setNegativeButton("No") {dialog, id -> dialog.cancel() }
         val alertDialog = alertDialogBuilder.create()
         alertDialog.show()
     }
 
-
     private fun addFavorite() {
+        val title = tv_item_title_favorite.toString()
+        val desc = tv_item_desc_favorite.toString()
 
-        val movieFav = intent.getParcelableExtra(EXTRA_MOVIE) as Movie
-        if (movie != null){
-            position = intent.getIntExtra(EXTRA_POSITION, 0)
-            isFav = false
-        }else{
-            movie = Movie()
-        }
-
-        tv_item_title_favorite.text = movieFav.title
-        tv_item_desc_favorite.text = movieFav.description
-        Glide.with(this).load("https://image.tmdb.org/t/p/w154/"+movieFav.poster).into(img_item_favorite)
+        movie?.title = title
+        movie?.description = desc
+        Glide.with(this).load("https://image.tmdb.org/t/p/w154/"+movie?.poster).into(img_item_favorite)
 
         val intent = Intent()
         intent.putExtra(EXTRA_MOVIE, movie)
         intent.putExtra(EXTRA_POSITION, position)
 
         val values = ContentValues()
-        values.put(_ID, movie?.id)
-        values.put(TITLE, movie?.title)
-        values.put(DESCRIPTION, movie?.description)
+        //values.put(_ID, movie?.id)
+        values.put(TITLE, title)
+        values.put(DESCRIPTION, desc)
         values.put(POSTER, movie?.poster)
 
-        movieHelper.open()
         val result = movieHelper.insert(values)
         if (result > 0){
             movie?.id = result.toInt()
             setResult(RESULT_ADD, intent)
-
             finish()
         } else{
             Toast.makeText(this, "Faild add item", Toast.LENGTH_SHORT).show()
         }
-
     }
 
     override fun onDestroy() {

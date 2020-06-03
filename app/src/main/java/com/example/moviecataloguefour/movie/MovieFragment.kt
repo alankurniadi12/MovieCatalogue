@@ -37,13 +37,19 @@ class MovieFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        showRecyclerViewMovie()
+    }
+
+    private fun showRecyclerViewMovie() {
         adapter = MovieAdapter()
         adapter.notifyDataSetChanged()
 
+        rv_item_movie.layoutManager = LinearLayoutManager(context)
+        rv_item_movie.adapter = adapter
+
         mainViewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(MovieViewModel::class.java)
-        showRecyclerViewMovie()
-        showLoading(true)
         mainViewModel.setListMovies()
+        showLoading(true)
 
         mainViewModel.getMovies().observe(viewLifecycleOwner, Observer { movieItems ->
             if (movieItems != null){
@@ -51,14 +57,6 @@ class MovieFragment : Fragment() {
                 showLoading(false)
             }
         })
-    }
-
-
-    private fun showRecyclerViewMovie() {
-        rv_item_movie.layoutManager = LinearLayoutManager(context)
-        rv_item_movie.adapter = adapter
-
-        adapter.setData(list)
 
         adapter.setOnItemClickCallback(object : MovieAdapter.OnItemClickCallback{
             override fun onItemClicked(data: Movie) {

@@ -28,11 +28,6 @@ class DetailTvShowActivity : AppCompatActivity() {
         return super.onCreateOptionsMenu(menu)
     }
 
-
-
-
-
-
     private fun getDataTvShow() {
         val tvshow = intent.getParcelableExtra(EXTRA_TVSHOW) as TvShow
         tv_detail_title_tvshow.text = tvshow.title

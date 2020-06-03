@@ -10,24 +10,19 @@ import com.bumptech.glide.Glide
 import com.example.moviecataloguefour.CustomOnItemClickListener
 import com.example.moviecataloguefour.R
 import com.example.moviecataloguefour.movie.DetailMovieActivity
+import com.example.moviecataloguefour.movie.Movie
 import kotlinx.android.synthetic.main.item_fav_mov.view.*
 
 class FavoriteMovieAdapter(private val activity: Activity): RecyclerView.Adapter<FavoriteMovieAdapter.FavoriteMovieViewHolder>() {
+    var listFavMovie = ArrayList<Movie>()
+        set(listFavMovie) {
+            if (listFavMovie.size > 0){
+                this.listFavMovie.clear()
+            }
+            this.listFavMovie.add(listFavMovie)
 
-    /*private var onItemClickCallback: OnItemClickCallback? = null
-
-    fun setOnItemClickCallback(onItemClickCallback: OnItemClickCallback){
-        this.onItemClickCallback = onItemClickCallback
-    }*/
-
-
-
-    var listFavMovie = ArrayList<Favorite>()
-        fun setData(items: ArrayList<Favorite>){
-            listFavMovie.clear()
-            listFavMovie.addAll(items)
-            notifyDataSetChanged()
-        }
+        notifyDataSetChanged()
+    }
 
     fun addItem(favorite: Favorite){
         this.listFavMovie.add(favorite)
@@ -70,16 +65,9 @@ class FavoriteMovieAdapter(private val activity: Activity): RecyclerView.Adapter
                         activity.startActivity(intent)
                     }
                 }))
-//                itemView.setOnClickListener{onItemClickCallback?.onItemClicked(favorite)}
-
             }
         }
     }
-
-    /*interface OnItemClickCallback {
-        fun onItemClicked(favorite: Favorite)
-    }*/
-
 }
 
 
